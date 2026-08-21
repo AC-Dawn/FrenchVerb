@@ -7,6 +7,10 @@ const ETRE_FORMS = ["suis", "es", "est", "sommes", "êtes", "sont"];
 const ALLER_FORMS = ["vais", "vas", "va", "allons", "allez", "vont"];
 
 function getFormsByRule(verb, rule) {
+  if (verb.explicitForms) {
+    const explicitKey = { "futur-simple": "futurSimple", "conditionnel-present": "conditionnelPresent", "subjonctif-present": "subjonctifPresent" }[rule] || rule;
+    return verb.explicitForms[explicitKey] || [];
+  }
   switch (rule) {
     case "present": return getPresentForms(verb);
     case "imparfait": return getImparfaitForms(verb);
@@ -28,7 +32,7 @@ export function conjugateSimple(verb, tense, personIndex) {
   }
 
   const forms = getFormsByRule(verb, tense.conjugationRule);
-  return forms[personIndex];
+  return forms[personIndex] || "";
 }
 
 export function conjugateCompound(verb, tense, personIndex, auxiliary = verb.defaultAuxiliary) {
@@ -47,6 +51,7 @@ export function conjugateCompound(verb, tense, personIndex, auxiliary = verb.def
 export function getConjugation(verb, tense, personIndex) {
   if (tense.type === "compound") return conjugateCompound(verb, tense, personIndex);
   const predicate = conjugateSimple(verb, tense, personIndex);
+  if (verb.impersonal) return { answerForm: predicate, fullForm: predicate };
   const fullForm = personIndex === 0
     ? applyJeElision("je", predicate)
     : `${PERSONS[personIndex].displayName} ${predicate}`;
